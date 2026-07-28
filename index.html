@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confluence — Área do assinante</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0A0E14; --bg-1:#0F151E; --bg-2:#151D29;
+    --line:#232E3D; --gold:#E3A857; --teal:#3FA9A0; --rose:#C1666B;
+    --text-0:#F2F4F3; --text-1:#A7B1C2; --text-2:#6B7789;
+    --display:'Space Grotesk',sans-serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg-0); color:var(--text-0); font-family:var(--body); line-height:1.5; min-height:100vh;}
+  a{color:inherit;}
+  button, input{font-family:inherit;}
+  .mark{display:inline-flex; width:22px; height:22px; flex-shrink:0;}
+  .mark svg{width:100%; height:100%;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:600; font-size:17px;}
+
+  /* ---- auth screens ---- */
+  .auth-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .auth-card{
+    width:100%; max-width:380px; background:var(--bg-1); border:1px solid var(--line);
+    border-top:2px solid var(--gold); padding:38px 34px;
+  }
+  .auth-card .brand{justify-content:center; margin-bottom:6px;}
+  .auth-sub{text-align:center; font-size:13px; color:var(--text-2); margin-bottom:28px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-2); margin-bottom:7px;}
+  .field input{width:100%; background:var(--bg-0); border:1px solid var(--line); color:var(--text-0); padding:11px 13px; font-size:14px; border-radius:2px;}
+  .field input:focus{outline:none; border-color:var(--gold);}
+  .btn{font-family:var(--mono); font-size:13px; letter-spacing:0.05em; text-transform:uppercase; padding:12px 20px; border-radius:2px; cursor:pointer; border:1px solid transparent; width:100%; text-align:center;}
+  .btn-primary{background:var(--gold); color:#141005; font-weight:500;}
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-ghost{background:transparent; border-color:var(--line); color:var(--text-1); margin-top:10px;}
+  .btn-ghost:hover{border-color:var(--text-1);}
+  .btn-sm{padding:7px 13px; font-size:11.5px; width:auto;}
+  .msg{font-size:13px; padding:10px 12px; border-radius:2px; margin-bottom:16px;}
+  .msg-error{background:rgba(193,102,107,0.12); color:#E19097; border:1px solid rgba(193,102,107,0.3);}
+  .msg-ok{background:rgba(63,169,160,0.12); color:#7FCFC6; border:1px solid rgba(63,169,160,0.3);}
+  .fine{font-size:11.5px; color:var(--text-2); text-align:center; margin-top:18px; line-height:1.6;}
+  .divider{border-top:1px solid var(--line); margin:22px 0; text-align:center; position:relative;}
+  .divider span{position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--bg-1); padding:0 10px; font-family:var(--mono); font-size:10.5px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.08em;}
+
+  /* ---- app shell ---- */
+  .topbar{
+    position:sticky; top:0; z-index:20; background:rgba(10,14,20,0.9); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{max-width:980px; margin:0 auto; padding:0 24px; height:62px; display:flex; align-items:center; justify-content:space-between;}
+  .tabs{display:flex; gap:4px;}
+  .tab{font-family:var(--mono); font-size:12.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-2); padding:9px 16px; cursor:pointer; border-bottom:2px solid transparent; background:none; border-radius:0;}
+  .tab.active{color:var(--text-0); border-bottom-color:var(--gold);}
+  .tab:hover{color:var(--text-0);}
+  @media (max-width:720px){ .tabs{overflow-x:auto;} .tab{padding:9px 12px; white-space:nowrap;} }
+
+  .page{max-width:980px; margin:0 auto; padding:48px 24px 80px;}
+  .page-head{margin-bottom:32px;}
+  .page-head h2{font-family:var(--display); font-size:26px; font-weight:600;}
+  .page-head p{color:var(--text-1); font-size:14px; margin-top:6px;}
+
+  .badge{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; padding:3px 9px; border-radius:2px; display:inline-block;}
+  .badge-gold{background:rgba(227,168,87,0.14); color:var(--gold); border:1px solid rgba(227,168,87,0.3);}
+  .badge-teal{background:rgba(63,169,160,0.14); color:var(--teal); border:1px solid rgba(63,169,160,0.3);}
+  .badge-rose{background:rgba(193,102,107,0.14); color:var(--rose); border:1px solid rgba(193,102,107,0.3);}
+
+  .card{background:var(--bg-1); border:1px solid var(--line); padding:24px;}
+  .signal-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .signal-card{background:var(--bg-1); padding:22px;}
+  .signal-card .row1{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .signal-card .par{font-family:var(--display); font-size:18px; font-weight:600;}
+  .signal-card .dir{font-family:var(--mono); font-size:11.5px; text-transform:uppercase;}
+  .dir-compra{color:var(--teal);} .dir-venda{color:var(--rose);}
+  .signal-card .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; font-family:var(--mono); font-size:12.5px;}
+  .signal-card .grid3 div span{display:block; color:var(--text-2); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;}
+  .signal-card .time{margin-top:14px; font-size:11px; color:var(--text-2); font-family:var(--mono);}
+
+  .steps{border-top:1px solid var(--line);}
+  .step{display:grid; grid-template-columns:70px 1fr; gap:24px; padding:26px 0; border-bottom:1px solid var(--line);}
+  .step-num{font-family:var(--mono); font-size:13px; color:var(--gold); padding-top:3px;}
+  .step h3{font-family:var(--display); font-size:16.5px; font-weight:600; margin-bottom:7px;}
+  .step p{color:var(--text-1); font-size:14px; max-width:60ch;}
+  @media (max-width:600px){ .step{grid-template-columns:1fr; gap:6px;} }
+  .link-inline{font-size:13.5px; color:var(--teal); border-bottom:1px solid rgba(63,169,160,0.4); padding-bottom:1px;}
+  .placeholder-box{border:1px dashed var(--line); padding:44px 30px; text-align:center; color:var(--text-2);}
+  .placeholder-box h3{font-family:var(--display); color:var(--text-1); font-size:17px; margin-bottom:10px;}
+  .placeholder-box ul{list-style:none; margin-top:18px; display:inline-flex; flex-direction:column; gap:8px; text-align:left; font-size:13px;}
+  .placeholder-box ul li::before{content:'—'; margin-right:8px; color:var(--text-2);}
+
+  .status-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .warn-banner{background:rgba(227,168,87,0.1); border:1px solid rgba(227,168,87,0.3); color:var(--gold); padding:12px 16px; font-size:13px; margin-top:18px; border-radius:2px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-2); text-align:left; padding:10px 12px; border-bottom:1px solid var(--line);}
+  td{padding:12px; border-bottom:1px solid var(--line); color:var(--text-1);}
+  td input[type=date]{background:var(--bg-0); border:1px solid var(--line); color:var(--text-0); padding:6px 8px; font-size:12.5px; border-radius:2px;}
+  .actions-cell{display:flex; gap:6px; flex-wrap:wrap;}
+
+  .blocked-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .blocked-card{max-width:400px; text-align:center; background:var(--bg-1); border:1px solid var(--line); border-top:2px solid var(--rose); padding:40px 34px;}
+  .blocked-card h2{font-family:var(--display); font-size:22px; margin:14px 0 10px;}
+  .blocked-card p{color:var(--text-1); font-size:14px; margin-bottom:24px;}
+
+  .loading-wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; color:var(--text-2); font-family:var(--mono); font-size:13px;}
+
+  .spinner{width:34px; height:34px; border:2px solid var(--line); border-top-color:var(--gold); border-radius:50%; margin:0 auto; animation:spin 0.9s linear infinite;}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none; border-top-color:var(--line);} }
+
+  .ai-control{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:56px 20px; gap:22px;}
+  .ai-orb-wrap{position:relative; width:150px; height:150px; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent;}
+  .ai-ring{position:absolute; width:64px; height:64px; border-radius:50%; border:1px solid var(--gold); opacity:0; animation:ring-pulse 2.4s ease-out infinite;}
+  .ai-ring.r2{animation-delay:0.8s;}
+  .ai-ring.r3{animation-delay:1.6s;}
+  @keyframes ring-pulse{ 0%{transform:scale(1); opacity:0.65;} 100%{transform:scale(2.3); opacity:0;} }
+  .ai-core{position:relative; width:64px; height:64px; border-radius:50%; z-index:2; display:flex; align-items:center; justify-content:center; transition:box-shadow .3s, background .3s;}
+  .ai-core.off{background:var(--bg-2); border:1px solid var(--line);}
+  .ai-core.on{background:radial-gradient(circle at 35% 30%, #ffe4b0, var(--gold) 62%, #8a5f22 100%); box-shadow:0 0 34px rgba(227,168,87,0.55);}
+  .ai-core.on::before{content:''; position:absolute; inset:-1px; border-radius:50%; background:conic-gradient(from 0deg, rgba(255,255,255,0.65), transparent 55%); animation:sweep 1.5s linear infinite; mix-blend-mode:overlay;}
+  @keyframes sweep{ to{ transform:rotate(360deg); } }
+  .ai-core svg{width:24px; height:24px; position:relative; z-index:1;}
+  .ai-label{font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-1); text-align:center;}
+  .ai-label .dots span{animation:dot-fade 1.4s infinite; opacity:0;}
+  .ai-label .dots span:nth-child(2){animation-delay:.2s;} .ai-label .dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes dot-fade{ 0%,100%{opacity:0;} 50%{opacity:1;} }
+  @media (prefers-reduced-motion: reduce){ .ai-ring{animation:none; opacity:0;} .ai-core.on::before{animation:none;} }
+
+  .copy-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .copy-btn{
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.04em;
+    background:var(--bg-0); border:1px solid var(--line); color:var(--text-1);
+    padding:4px 8px; border-radius:2px; cursor:pointer; flex-shrink:0;
+  }
+  .copy-btn:hover{border-color:var(--gold); color:var(--gold);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const app = document.getElementById('app');
+
+const MARK_SVG = `<svg viewBox="0 0 22 22" fill="none"><line x1="2" y1="4" x2="11" y2="14" stroke="#3FA9A0" stroke-width="1.6"/><line x1="20" y1="3" x2="11" y2="14" stroke="#C1666B" stroke-width="1.6"/><line x1="11" y1="20" x2="11" y2="14" stroke="#8A94A6" stroke-width="1.6"/><circle cx="11" cy="14" r="2.6" fill="#E3A857"/></svg>`;
+
+let currentUser = null; // {username, role, status, validUntil}
+let view = 'loading';
+let tab = 'sinais';
+let errorMsg = '';
+let okMsg = '';
+
+let scanning = false;
+let aiOn = false;
+let autoScanTimer = null;
+let lastResults = [];
+let lastScanTime = null;
+let sharedLoaded = false;
+let lastError = null;
+
+const todayStr = () => new Date().toISOString().slice(0,10);
+
+async function hashPassword(pw){
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function callAuth(payload){
+  const res = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+function getToken(){ return localStorage.getItem('confluence_token'); }
+function setToken(t){ if(t) localStorage.setItem('confluence_token', t); else localStorage.removeItem('confluence_token'); }
+
+function currentRecord(){ return currentUser; }
+
+function decideView(){
+  if(!currentUser){ view = adminExists ? 'login' : 'admin-setup'; return; }
+  if(currentUser.role === 'admin'){ view='dashboard'; return; }
+  if(currentUser.status === 'blocked' || currentUser.validUntil < todayStr()){ view='blocked'; return; }
+  view='dashboard';
+}
+
+let adminExists = true; // assume que sim até confirmarmos, para não piscar a tela errada
+
+async function init(){
+  view = 'loading'; render();
+  const token = getToken();
+  if(token){
+    const data = await callAuth({ action:'session', token });
+    if(data.ok){
+      currentUser = { username:data.username, role:data.role, status:data.status, validUntil:data.validUntil };
+    } else {
+      setToken(null);
+    }
+  }
+  if(!currentUser){
+    const st = await callAuth({ action:'status' });
+    adminExists = !!st.hasAdmin;
+  }
+  decideView();
+  render();
+}
+
+async function runScan(force){
+  if(scanning) return;
+  scanning = true; lastError=null; render();
+  try{
+    const res = await fetch('/api/signals' + (force ? '?force=1' : ''));
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    lastResults = data.results || [];
+    lastScanTime = data.time || new Date().toLocaleTimeString('pt-BR');
+    if(data.errors && data.errors.length) lastError = data.errors[0];
+  } catch(e){
+    lastError = e.message || String(e);
+  }
+  scanning = false;
+  render();
+}
+
+function toggleAI(){
+  aiOn = !aiOn;
+  if(aiOn){
+    runScan(true);
+    autoScanTimer = setInterval(() => runScan(true), 10*60*1000);
+  } else if(autoScanTimer){
+    clearInterval(autoScanTimer); autoScanTimer = null;
+  }
+  render();
+}
+
+/* ---------- actions ---------- */
+async function submitAdminSetup(username, pw, pw2){
+  errorMsg=''; okMsg='';
+  if(!username || !pw){ errorMsg='Preencha usuário e senha.'; render(); return; }
+  if(pw !== pw2){ errorMsg='As senhas não coincidem.'; render(); return; }
+  if(pw.length < 6){ errorMsg='Use uma senha com pelo menos 6 caracteres.'; render(); return; }
+  const passwordHash = await hashPassword(pw);
+  const data = await callAuth({ action:'setup-admin', username, passwordHash });
+  if(!data.ok){ errorMsg = data.error || 'Não foi possível criar a conta.'; render(); return; }
+  setToken(data.token);
+  currentUser = { username:data.username, role:data.role, status:data.status, validUntil:data.validUntil };
+  decideView(); render();
+}
+
+async function submitLogin(username, pw){
+  errorMsg=''; okMsg='';
+  if(!username || !pw){ errorMsg='Preencha usuário e senha.'; render(); return; }
+  const passwordHash = await hashPassword(pw);
+  const data = await callAuth({ action:'login', username, passwordHash });
+  if(!data.ok){ errorMsg = data.error || 'Não foi possível entrar.'; render(); return; }
+  setToken(data.token);
+  currentUser = { username:data.username, role:data.role, status:data.status, validUntil:data.validUntil };
+  decideView(); render();
+}
+
+async function createTestSubscriber(){
+  const data = await callAuth({ action:'create-test-subscriber' });
+  if(!data.ok){ errorMsg = 'Não foi possível criar a conta de teste.'; render(); return; }
+  setToken(data.token);
+  currentUser = { username:data.username, role:data.role, status:data.status, validUntil:data.validUntil };
+  okMsg = `Conta de teste criada — usuário: ${data.username} / senha: ${data.password}`;
+  decideView(); render();
+}
+
+async function logout(){
+  await callAuth({ action:'logout', token:getToken() });
+  setToken(null);
+  currentUser = null;
+  sharedLoaded = false; lastResults = []; lastScanTime = null; adminUserList = null; aiOn = false;
+  if(autoScanTimer){ clearInterval(autoScanTimer); autoScanTimer = null; }
+  const st = await callAuth({ action:'status' });
+  adminExists = !!st.hasAdmin;
+  view = adminExists ? 'login' : 'admin-setup';
+  errorMsg=''; okMsg='';
+  render();
+}
+
+let adminUserList = null;
+
+async function loadAdminUserList(){
+  const data = await callAuth({ action:'admin-list', token:getToken() });
+  adminUserList = data.ok ? data.users : [];
+  render();
+}
+async function setUserStatus(username, status){
+  await callAuth({ action:'admin-set-status', token:getToken(), targetUser:username, status });
+  await loadAdminUserList();
+}
+async function setUserValidUntil(username, date){
+  await callAuth({ action:'admin-set-validity', token:getToken(), targetUser:username, validUntil:date });
+  await loadAdminUserList();
+}
+
+/* ---------- render ---------- */
+function render(){
+  if(view==='loading') return renderLoading();
+  if(view==='admin-setup') return renderAdminSetup();
+  if(view==='login') return renderLogin();
+  if(view==='blocked') return renderBlocked();
+  if(view==='dashboard') return renderDashboard();
+}
+
+function renderLoading(){
+  app.innerHTML = `<div class="loading-wrap">Carregando Confluence…</div>`;
+}
+
+function renderAdminSetup(){
+  app.innerHTML = `
+    <div class="auth-wrap"><div class="auth-card">
+      <div class="brand"><span class="mark">${MARK_SVG}</span>Confluence</div>
+      <div class="auth-sub">Primeiro acesso — configure sua conta de administrador</div>
+      ${errorMsg ? `<div class="msg msg-error">${errorMsg}</div>` : ''}
+      <div class="field"><label>Usuário</label><input id="au" placeholder="Adm" value="Adm"></div>
+      <div class="field"><label>Senha</label><input id="ap" type="password" placeholder="Crie uma senha"></div>
+      <div class="field"><label>Confirmar senha</label><input id="ap2" type="password" placeholder="Repita a senha"></div>
+      <button class="btn btn-primary" id="btn-admin-setup">Criar conta admin</button>
+      <div class="fine">Essa é a única vez que essa tela aparece. A senha fica protegida por hash — não é salva em texto puro.</div>
+    </div></div>`;
+  document.getElementById('btn-admin-setup').onclick = () =>
+    submitAdminSetup(document.getElementById('au').value.trim(), document.getElementById('ap').value, document.getElementById('ap2').value);
+}
+
+function renderLogin(){
+  app.innerHTML = `
+    <div class="auth-wrap"><div class="auth-card">
+      <div class="brand"><span class="mark">${MARK_SVG}</span>Confluence</div>
+      <div class="auth-sub">Acesse sua área de assinante</div>
+      ${errorMsg ? `<div class="msg msg-error">${errorMsg}</div>` : ''}
+      ${okMsg ? `<div class="msg msg-ok">${okMsg}</div>` : ''}
+      <div class="field"><label>Usuário</label><input id="lu" placeholder="Seu usuário"></div>
+      <div class="field"><label>Senha</label><input id="lp" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-primary" id="btn-login">Entrar</button>
+      <div class="divider"><span>ambiente de teste</span></div>
+      <button class="btn btn-ghost" id="btn-test">Criar assinante de teste e entrar</button>
+      <div class="fine">Depois que o pagamento automático estiver conectado, essa conta de teste será substituída pela criação automática de acesso após a confirmação da assinatura.</div>
+    </div></div>`;
+  document.getElementById('btn-login').onclick = () =>
+    submitLogin(document.getElementById('lu').value.trim(), document.getElementById('lp').value);
+  document.getElementById('btn-test').onclick = createTestSubscriber;
+}
+
+function renderBlocked(){
+  app.innerHTML = `
+    <div class="blocked-wrap"><div class="blocked-card">
+      <span class="badge badge-rose">Acesso bloqueado</span>
+      <h2>Sua assinatura venceu</h2>
+      <p>Renove para voltar a receber os sinais e acessar sua área na Confluence.</p>
+      <button class="btn btn-primary" id="btn-renew">Renovar agora</button>
+      <button class="btn btn-ghost" id="btn-logout-b">Sair</button>
+    </div></div>`;
+  document.getElementById('btn-renew').onclick = () => alert('Isso será conectado ao pagamento automático na próxima etapa.');
+  document.getElementById('btn-logout-b').onclick = logout;
+}
+
+function renderDashboard(){
+  const rec = currentRecord();
+  const isAdmin = rec.role === 'admin';
+  const tabsHtml = `
+       <button class="tab ${tab==='sinais'?'active':''}" data-tab="sinais">Sinais</button>
+       <button class="tab ${tab==='tutorial'?'active':''}" data-tab="tutorial">Tutorial</button>
+       <button class="tab ${tab==='assinatura'?'active':''}" data-tab="assinatura">Minha assinatura</button>
+       ${isAdmin ? `<button class="tab ${tab==='admin'?'active':''}" data-tab="admin">Painel admin</button>` : ''}`;
+
+  app.innerHTML = `
+    <div class="topbar"><div class="topbar-inner">
+      <div class="brand"><span class="mark">${MARK_SVG}</span>Confluence</div>
+      <div class="tabs">${tabsHtml}</div>
+      <button class="btn btn-ghost btn-sm" id="btn-logout">Sair</button>
+    </div></div>
+    <div class="page" id="page-content"></div>
+  `;
+  document.querySelectorAll('.tab').forEach(el => el.onclick = () => { tab = el.dataset.tab; render(); });
+  document.getElementById('btn-logout').onclick = logout;
+
+  const content = document.getElementById('page-content');
+  if(tab==='sinais'){
+    if(!sharedLoaded && !scanning){
+      sharedLoaded = true;
+      content.innerHTML = `<div class="loading-wrap" style="min-height:220px;">Carregando sinais…</div>`;
+      runScan(false);
+    } else {
+      content.innerHTML = renderSinaisTab(isAdmin);
+    }
+  }
+  else if(tab==='tutorial') content.innerHTML = renderTutorialTab();
+  else if(tab==='assinatura') content.innerHTML = renderAssinaturaTab(rec);
+  else if(tab==='admin' && isAdmin) content.innerHTML = renderAdminTab();
+
+  if(tab==='admin' && isAdmin) wireAdminTab();
+  if(tab==='assinatura') wireAssinaturaTab();
+  if(tab==='sinais') wireSinaisTab(isAdmin);
+  if(tab==='tutorial'){
+    const le = document.getElementById('link-exness');
+    if(le) le.onclick = (e) => { e.preventDefault(); alert('Ainda falta cadastrar o link de indicação da Exness aqui. Assim que você tiver o link, é só me passar que eu troco.'); };
+  }
+}
+
+function copyRow(value){
+  return `<span class="copy-row">${value}<button class="copy-btn" data-copy="${value}">Copiar</button></span>`;
+}
+
+function renderSinaisTab(isAdmin){
+  const now = Date.now();
+  const validResults = lastResults.filter(s => !s.generatedAt || (now - s.generatedAt) < (s.validForMs || 15*60*1000));
+
+  const cards = validResults.map(s => {
+    const minutesLeft = s.generatedAt ? Math.max(1, Math.round(((s.validForMs||900000) - (now - s.generatedAt)) / 60000)) : null;
+    const genTime = s.generatedAt ? new Date(s.generatedAt).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : null;
+    return `
+    <div class="signal-card">
+      <div class="row1">
+        <span class="par">${s.symbol}</span>
+        <span class="dir ${s.dir==='Compra'?'dir-compra':'dir-venda'}">${s.dir}</span>
+      </div>
+      <div class="grid3">
+        <div><span>Entrada</span>${copyRow(s.entry)}</div>
+        <div><span>Stop loss</span>${copyRow(s.stop)}</div>
+        <div><span>Stop win</span>${copyRow(s.alvo)}</div>
+      </div>
+      ${genTime ? `<div class="time" style="margin-top:12px;">Gerado às ${genTime} · válido por mais ${minutesLeft} min</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const debugLine = (isAdmin && lastError && validResults.length===0) ? `<div class="fine" style="color:var(--rose); text-align:left; margin-top:14px;">Um dos pares não pôde ser analisado agora (instabilidade momentânea na fonte de dados) — isso não afeta os demais. Detalhe técnico: ${lastError}</div>` : '';
+  const searchAgainBtn = (isAdmin && validResults.length) ? `<button class="btn btn-ghost btn-sm" id="btn-scan-again" style="margin-top:18px;">Procurar outra oportunidade</button>` : '';
+
+  const orb = isAdmin ? `
+    <div class="ai-control">
+      <div class="ai-orb-wrap" id="ai-toggle">
+        ${aiOn ? `<div class="ai-ring r1"></div><div class="ai-ring r2"></div><div class="ai-ring r3"></div>` : ''}
+        <div class="ai-core ${aiOn?'on':'off'}">
+          <span class="mark">${MARK_SVG}</span>
+        </div>
+      </div>
+      <div class="ai-label">${aiOn ? `Buscando a melhor oportunidade<span class="dots"><span>.</span><span>.</span><span>.</span></span>` : 'Toque para ligar a IA'}</div>
+    </div>` : (validResults.length===0 ? `
+    <div class="ai-control">
+      <div class="ai-orb-wrap">
+        <div class="ai-ring r1"></div><div class="ai-ring r2"></div><div class="ai-ring r3"></div>
+        <div class="ai-core on"><span class="mark">${MARK_SVG}</span></div>
+      </div>
+      <div class="ai-label">Buscando a melhor oportunidade<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+    </div>` : '');
+
+  return `
+    <div class="page-head"><h2>Sinais</h2></div>
+    ${orb}
+    ${validResults.length ? `<div class="signal-grid">${cards}</div>${searchAgainBtn}` : ''}
+    ${debugLine}`;
+}
+function wireSinaisTab(isAdmin){
+  const orb = document.getElementById('ai-toggle');
+  if(orb) orb.onclick = toggleAI;
+  const again = document.getElementById('btn-scan-again');
+  if(again) again.onclick = () => runScan(true);
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.onclick = () => {
+      const text = btn.dataset.copy;
+      const flash = () => {
+        const original = btn.textContent;
+        btn.textContent = 'Copiado!';
+        setTimeout(() => { btn.textContent = original; }, 1400);
+      };
+      const fallback = () => {
+        try{
+          const ta = document.createElement('textarea');
+          ta.value = text; ta.style.position='fixed'; ta.style.left='-9999px';
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch(e){}
+        flash();
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(flash).catch(fallback);
+      } else {
+        fallback();
+      }
+    };
+  });
+}
+
+function renderTutorialTab(){
+  return `
+    <div class="page-head"><h2>Tutorial</h2><p>Passo a passo para configurar o MT5 e usar os sinais da Confluence — mesmo que seja sua primeira vez.</p></div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div>
+          <h3>Baixe o MetaTrader 5</h3>
+          <p>Instale o app "MetaTrader 5" gratuito na App Store ou Google Play. É o app oficial usado para abrir e acompanhar operações no celular.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div>
+          <h3>Abra uma conta em uma corretora</h3>
+          <p>Você precisa de uma conta em uma corretora que ofereça MT5 para negociar forex. Eu uso a <strong>Exness</strong> e recomendo por isso — funciona bem com o app e o processo de abertura de conta é rápido. Você pode usá-la ou escolher outra corretora de sua confiança.</p>
+          <p style="margin-top:10px;"><a href="#" id="link-exness" class="link-inline">Abrir conta na Exness →</a></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div>
+          <h3>Vincule a conta ao MT5</h3>
+          <p>No app MT5, toque em "Nova conta" → "Entrar em uma conta existente", selecione o servidor da sua corretora e digite o login e senha que ela te enviou por e-mail.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div>
+          <h3>Copie o sinal para o MT5</h3>
+          <p>Na aba <strong>Sinais</strong>, você vê o par, a direção (compra ou venda), a entrada, o stop loss e o stop win. No MT5: abra o par correspondente, toque em "Nova ordem", escolha compra ou venda conforme o sinal e preencha os campos "S/L" (stop loss) e "T/P" (stop win/take profit) com os valores exatos do sinal.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div>
+          <h3>Acompanhe até o alvo</h3>
+          <p>Depois de confirmar a ordem, é só acompanhar em "Negociação" dentro do app. A operação fecha sozinha ao atingir o stop loss ou o stop win.</p>
+        </div>
+      </div>
+    </div>
+    <div class="warn-banner" style="margin-top:8px;">Este conteúdo é visível apenas para assinantes.</div>`;
+}
+
+function renderAssinaturaTab(rec){
+  const badge = rec.status==='blocked' ? 'badge-rose' : 'badge-teal';
+  const statusLabel = rec.status==='blocked' ? 'Bloqueada' : 'Ativa';
+  const daysLeft = Math.ceil((new Date(rec.validUntil) - new Date(todayStr())) / 86400000);
+  const warn = (rec.status!=='blocked' && daysLeft <= 1 && daysLeft >= 0)
+    ? `<div class="warn-banner">Sua assinatura vence ${daysLeft===0?'hoje':'amanhã'} — renove para não perder o acesso.</div>` : '';
+  return `
+    <div class="page-head"><h2>Minha assinatura</h2></div>
+    <div class="card">
+      <div class="status-row">
+        <span class="badge ${badge}">${statusLabel}</span>
+        <span style="font-family:var(--mono); font-size:13px; color:var(--text-1);">Válida até ${rec.validUntil}</span>
+      </div>
+      ${warn}
+      <button class="btn btn-primary" style="width:auto; margin-top:20px;" id="btn-renew-sub">Renovar agora</button>
+    </div>`;
+}
+function wireAssinaturaTab(){
+  const btn = document.getElementById('btn-renew-sub');
+  if(btn) btn.onclick = () => alert('Isso será conectado ao pagamento automático na próxima etapa.');
+}
+
+function renderAdminTab(){
+  if(adminUserList === null){
+    loadAdminUserList();
+    return `<div class="loading-wrap" style="min-height:200px;">Carregando assinantes…</div>`;
+  }
+  const rows = adminUserList.map(u => `
+    <tr>
+      <td>${u.username}</td>
+      <td><span class="badge ${u.status==='blocked'?'badge-rose':'badge-teal'}">${u.status==='blocked'?'Bloqueada':'Ativa'}</span></td>
+      <td><input type="date" value="${u.validUntil}" data-user="${u.username}" class="date-input"></td>
+      <td class="actions-cell">
+        <button class="btn btn-ghost btn-sm act-active" data-user="${u.username}">Ativar</button>
+        <button class="btn btn-ghost btn-sm act-block" data-user="${u.username}">Bloquear</button>
+      </td>
+    </tr>`).join('');
+  return `
+    <div class="page-head">
+      <h2>Painel admin</h2>
+      <p>Enquanto o pagamento automático não está conectado, use esta tela para liberar ou bloquear manualmente o acesso dos assinantes.</p>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Usuário</th><th>Status</th><th>Válida até</th><th>Ações</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="4" style="color:var(--text-2);">Nenhum assinante ainda.</td></tr>`}</tbody>
+      </table>
+    </div>`;
+}
+function wireAdminTab(){
+  document.querySelectorAll('.date-input').forEach(el => el.onchange = () => setUserValidUntil(el.dataset.user, el.value));
+  document.querySelectorAll('.act-active').forEach(el => el.onclick = () => setUserStatus(el.dataset.user, 'active'));
+  document.querySelectorAll('.act-block').forEach(el => el.onclick = () => setUserStatus(el.dataset.user, 'blocked'));
+}
+
+init();
+setInterval(() => { if(view==='dashboard' && tab==='sinais') render(); }, 60000);
+</script>
+</body>
+</html>
